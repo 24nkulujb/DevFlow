@@ -1,0 +1,18 @@
+-- 用于初始化一个新的本地开发数据库。
+-- 已经建表的数据库不需要重复执行。
+
+CREATE DATABASE IF NOT EXISTS devflow
+    CHARACTER SET utf8mb4;
+
+USE devflow;
+
+CREATE TABLE project (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '项目ID',
+    name VARCHAR(50) NOT NULL COMMENT '项目名称',
+    description VARCHAR(500) NOT NULL DEFAULT '' COMMENT '项目描述',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id)
+) ENGINE = InnoDB;
