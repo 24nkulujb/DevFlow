@@ -1,3 +1,5 @@
+import { getCsrfHeaders } from "./auth"
+
 export interface Project {
     id: number
     name: string
@@ -29,14 +31,17 @@ export async function getProjects(): Promise<Project[]> {
 export async function createProjectApi(
   input: CreateProjectInput,
 ): Promise<void> {
+  const csrfHeaders = await getCsrfHeaders()
+
   const response = await fetch('/api/projects', {
     method: 'POST',
     headers: {
+      ...csrfHeaders,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
   })
-
+  
   if (!response.ok) {
     throw new HttpError(response.status)
   }
