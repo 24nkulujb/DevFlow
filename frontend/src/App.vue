@@ -30,6 +30,66 @@ async function loadProjects() {
   }
 }
 
+const projectName = ref('')
+const projectDescription = ref('')
+const submitting = ref(false)
+const submitError = ref('')
+const successMessage = ref('')
+
+async function createProject() {
+  if (submitting.value || loading.value) return 
+
+  submitError.value = ''
+  successMessage.value = ''
+
+  const name = projectName.value.trim()
+  const description = projectDescription.value.trim()
+
+  if (!name) {
+    submitError.value = '请输入项目名称'
+    return
+
+  }
+
+  if (name.length > 50 || description.length > 500) {
+    submitError.value = '名称最多50个字符, 描述最多500个字符'
+    return
+  }
+
+  submitting.value = true
+
+  try {
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body:JSON.stringify({name, description}),
+    })
+
+    if (!response.ok) {
+      submitError.value = 
+        response.status === 400
+          ? '提交内容不符合要求，请检查名称和描述'
+          : `创建失败，状态码：${response.status}`
+      return 
+    }
+
+    projectName.value = ''
+    projectDescription.value = ''
+    successMessage.value = '项目创建成功'
+
+    await loadProjects()
+
+  } catch {
+    submitError.value = 
+      '未能确认创建结果, 请检查网络或后端服务。重试前先刷新列表, 确认是否已创建。'
+  } finally {
+    submitting.value = false
+  }
+  
+}
+
 onMounted(loadProjects)
 
 </script>
@@ -43,10 +103,52 @@ onMounted(loadProjects)
         <p class="subtitle">集中管理项目 让团队协作更清晰</p>
       </div>
 
-      <button :disabled="loading" @click="loadProjects">
+      <button :disabled="loading || submitting" @click="loadProjects">
         {{ loading ? '加载中...' : '刷新列表'}}
       </button>
     </header>
+
+    <form class="create-form" @submit.prevent="createProject">
+      <h2>创建项目</h2>
+
+      <fieldset :disabled="submitting">
+        <div class="form-field">
+          <label for="project-name">项目名称</label>
+          <input
+            id="project-name"
+            v-model="projectName"
+            type="text"
+            maxlength="50"
+            required
+            placeholder="例如 团队官网开发"
+            />
+        </div>
+
+        <div class="form-field">
+          <label for="project-description">项目描述(可选)</label>
+          <textarea
+            id="project-description"
+            v-model="projectDescription"
+            maxlength="500"
+            rows="3"
+            placeholder="描述项目目标"
+            >
+          </textarea>
+        </div>
+
+        <button type="submit" :disabled="submitting || loading">
+          {{ submitting ? '创建中...' : '创建项目'}}
+        </button>
+      </fieldset>
+
+      <p v-if="submitError" class="error" role="alert">
+        {{submitError}}
+      </p>
+
+      <p v-if="successMessage" class="success" role="status">
+        {{successMessage}}
+      </p>
+    </form>
 
     <p v-if="loading" role="status">正在加载项目...</p>
 
@@ -148,10 +250,62 @@ h2 {
   color: #b91c1c;
 }
 
+.create-form {
+  margin-bottom: 32px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+.success {
+  margin-top: 16px;
+  color: #15803d;
+}
+
 @media (max-width: 600px) {
   .page-header {
     align-items: flex-start;
     flex-direction: column;
   }
+
 }
 </style>

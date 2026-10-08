@@ -10,4 +10,6 @@ public interface ProjectMapper {
     long countProjects();
 
     List<Project> findAll();
+
+    int insert(Project project);
 }

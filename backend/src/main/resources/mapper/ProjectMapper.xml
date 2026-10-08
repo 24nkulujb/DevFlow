@@ -16,4 +16,12 @@
         FROM project
         ORDER BY id DESC
     </select>
+
+    <insert id="insert"
+            parameterType="com.devflow.backend.model.Project"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO project (name, description)
+        VALUES (#{name}, #{description})
+    </insert>
 </mapper>
