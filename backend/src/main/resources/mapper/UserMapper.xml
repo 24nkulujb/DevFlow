@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper>
+
+    <resultMap id="userCredentialsMap"
+               type="com.devflow.backend.model.UserCredentials">
+        <constructor>
+            <idArg column="id" javaType="java.lang.Long" />
+            <arg column="username" javaType="java.lang.String" />
+            <arg column="password_hash" javaType="java.lang.String" />
+            <arg column="display_name" javaType="java.lang.String" />
+        </constructor>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="userCredentialsMap">
+        select id, username, password_hash, display_name
+        from app_user
+        where username = #{username}
+    </select>
+</mapper>
