@@ -1,0 +1,73 @@
+# DevFlow 第一版学习路线
+
+这份路线按工程师真实开发顺序阅读，不需要一次理解整个仓库。每节建议先运行对应功能，再追踪请求，最后做一个小练习。
+
+## 1. 先看到完整产品（30 分钟）
+
+启动 README 中的前后端。使用 Alice 登录，查看项目 → 看板 → 任务抽屉 → 评论 → 成员 → 概览；再使用 Bob/Charlie 对比操作权限。
+先记住：浏览器只操作接口，MySQL 只由后端访问。
+
+## 2. 工程入口与路由（1 小时）
+
+阅读 frontend/src/main.ts、App.vue、router/index.ts。
+理解 Vue 挂载、Pinia、RouterView、懒加载和路由守卫。
+练习：给项目页添加一个只读欢迎提示，不改业务接口。
+
+## 3. 第一个查询请求（1～2 小时）
+
+阅读 api/http.ts → api/projects.ts → ProjectsView.vue。
+后端阅读 ProjectController → ProjectService → ProjectMapper.java/XML。
+跟踪 GET /api/projects，理解 JSON、异步请求、响应式数据、加载/空/错误三种状态。
+练习：在项目卡片展示更新时间；判断数据应该由哪里提供。
+
+## 4. 表单写入与校验（1～2 小时）
+
+阅读 ProjectsView 创建表单、WorkspaceRequests.ProjectInput、ProjectService.createProject。
+理解 v-model、POST、Bean Validation、参数绑定、自动生成主键。
+创建项目和添加创建者成员在同一个事务中：任何一步失败，两步都回滚。
+练习：不使用页面，直接发一个空白项目名，观察后端为何仍能拒绝。
+
+## 5. 身份认证与会话（2 小时）
+
+阅读 SecurityConfig、AuthController、api/auth.ts、stores/auth.ts、LoginView.vue。
+BCrypt 哈希不能解密，matches 验证输入；Cookie 保存 Session 标识，真实登录状态保存在后端。
+CSRF token 与登录凭据不同：它用于校验写请求。登录/退出会改变 token，客户端每次写请求前重新取 token。
+前端守卫负责导航体验，后端认证负责真正拒绝接口访问。
+练习：退出后直接请求项目接口，观察 401；去掉写请求的 CSRF header，观察 403。
+
+## 6. 项目成员与数据隔离（2 小时）
+
+阅读 project_member 表、ProjectAccess、ProjectService 的成员方法。
+项目与用户是多对多关系，角色属于项目成员，不是用户的全局属性。
+普通成员不能编辑项目或管理成员；项目必须保留管理员。
+ProjectAccess 对每个写操作锁定项目行，在同一个事务里验证成员与更新，避免成员被移除与任务指派同时发生。
+练习：Alice 不属于 Bob 的独立项目；直接请求该项目/任务/评论接口，确认都被拒绝。
+
+## 7. 任务、版本与协作（2～3 小时）
+
+阅读 TaskService、TaskMapper、ProjectDetailView、TaskDrawer。
+任务状态是 TODO / IN_PROGRESS / DONE。编辑权限属于管理员、创建者或负责人。
+version 实现乐观锁：UPDATE 必须匹配旧版本，成功后版本递增。过期页面提交得到 409，不会静默覆盖新修改。
+移除成员的事务取消未完成任务的负责人并递增版本；完成任务保留历史负责人。
+评论属于任务，任务属于项目，因此评论入口也要验证项目成员关系。
+练习：打开两个页面编辑同一任务，先后保存，观察第二次冲突如何处理。
+
+## 8. 统计、迁移与交付（2 小时）
+
+阅读 TaskMapper.stats、StatsPanel、Flyway 的 V1/V2/V3、DemoDataInitializer。
+逾期按北京时间日期计算：截止日期早于今天，且状态不是 DONE。没有任务的完成率是 0。
+迁移脚本入 Git，Flyway 记录执行版本；已经执行的迁移不再修改，应新增下一个版本。
+测试使用 H2 隔离数据库，真实 MySQL 另有 HTTP 冒烟脚本；两者验证范围不同。
+阅读 compose.yaml、Nginx、CI，理解同源代理、持久化卷、环境变量和自动构建。
+练习：为一个权限边界新增自动化测试，再发起 Git 提交。
+
+## 推荐复习安排
+
+每天 1～2 小时，第一周完成 1～5 节，第二周完成 6～8 节并独立复写一个小功能。
+每节记录：输入是什么、谁校验、谁查库、返回什么、哪里会失败、如何验证。
+代码要按调用链理解，而不是按文件夹逐行背诵。
+
+## 第一版范围
+
+已实现项目创建/列表/详情/编辑、登录/退出/当前用户、成员角色/移除、任务创建/编辑/指派/筛选/看板/状态、评论、统计。
+没有任务或项目删除、注册、附件、通知、拖拽排序、AI、操作日志；这些属于后续版本。
