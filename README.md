@@ -14,7 +14,7 @@ Vue 3 + TypeScript + Java 17 + Spring Boot 4.1 + MyBatis + MySQL 的全栈作品
 - 响应式布局、原生模态框焦点管理、加载/空/失败状态。
 - Flyway 增量迁移、隔离测试、真实 MySQL 冒烟脚本、GitHub Actions 与 Docker Compose。
 
-[学习路线](docs/LEARNING.md) · [架构与数据库](docs/ARCHITECTURE.md) · [接口说明](docs/API.md) · [验收清单](docs/ACCEPTANCE.md) · [部署说明](docs/DEPLOYMENT.md)
+[新手分章教材：代码、语法与设计思路](docs/LEARNING.md) · [架构与数据库](docs/ARCHITECTURE.md) · [接口说明](docs/API.md) · [验收清单](docs/ACCEPTANCE.md) · [部署说明](docs/DEPLOYMENT.md)
 
 ## 本机启动（你当前的开发方式）
 
