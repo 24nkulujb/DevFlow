@@ -1,10 +1,10 @@
 package com.devflow.backend;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class PasswordHashTests {
 
@@ -22,8 +22,5 @@ class PasswordHashTests {
 
         System.out.println("Alice hash: " + aliceHash);
         System.out.println("Bob hash: " + bobHash);
-
-
     }
-
 }

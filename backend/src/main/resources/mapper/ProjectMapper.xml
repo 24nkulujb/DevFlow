@@ -1,27 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.devflow.backend.mapper.ProjectMapper">
-    <select id="countProjects" resultType="long">
-        SELECT COUNT(*)
-        FROM project
-    </select>
-
-    <select id="findAll"
-            resultType="com.devflow.backend.model.Project">
-        SELECT id, name, description
-        FROM project
-        ORDER BY id DESC
-    </select>
-
-    <insert id="insert"
-            parameterType="com.devflow.backend.model.Project"
-            useGeneratedKeys="true"
-            keyProperty="id">
-        INSERT INTO project (name, description)
-        VALUES (#{name}, #{description})
-    </insert>
+ <select id="countProjects" resultType="long">SELECT COUNT(*) FROM project</select>
+ <select id="findAll" resultType="com.devflow.backend.model.Project">SELECT id,name,description,created_at,updated_at FROM project ORDER BY id DESC</select>
+ <sql id="summary">
+  SELECT p.id,p.name,p.description,p.created_at,p.updated_at,m.role,
+   (SELECT COUNT(*) FROM project_member pm WHERE pm.project_id=p.id) AS member_count,
+   (SELECT COUNT(*) FROM task t WHERE t.project_id=p.id) AS task_count,
+   (SELECT COUNT(*) FROM task t WHERE t.project_id=p.id AND t.status='DONE') AS done_count
+  FROM project p JOIN project_member m ON m.project_id=p.id AND m.user_id=#{userId}
+ </sql>
+ <select id="findForUser" resultType="com.devflow.backend.model.Project"><include refid="summary"/> ORDER BY p.updated_at DESC,p.id DESC</select>
+ <select id="findAccessible" resultType="com.devflow.backend.model.Project"><include refid="summary"/> WHERE p.id=#{id}</select>
+ <select id="lockProject" resultType="long">SELECT id FROM project WHERE id=#{id} FOR UPDATE</select>
+ <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO project(name,description) VALUES(#{name},#{description})</insert>
+ <update id="update">UPDATE project SET name=#{name},description=#{description},updated_at=CURRENT_TIMESTAMP WHERE id=#{id}</update>
 </mapper>

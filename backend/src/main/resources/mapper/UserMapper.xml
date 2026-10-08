@@ -1,21 +1,21 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.devflow.backend.mapper.UserMapper">
-    <resultMap id="userCredentialsMap"
-               type="com.devflow.backend.model.UserCredentials">
-        <constructor>
-            <idArg column="id" javaType="java.lang.Long" />
-            <arg column="username" javaType="java.lang.String" />
-            <arg column="password_hash" javaType="java.lang.String" />
-            <arg column="display_name" javaType="java.lang.String" />
-        </constructor>
-    </resultMap>
-
-    <select id="findByUsername" resultMap="userCredentialsMap">
-        select id, username, password_hash, display_name
-        from app_user
-        where username = #{username}
-    </select>
+ <resultMap id="credentials" type="com.devflow.backend.model.UserCredentials">
+  <constructor>
+   <idArg column="id" javaType="java.lang.Long"/>
+   <arg column="username" javaType="java.lang.String"/>
+   <arg column="password_hash" javaType="java.lang.String"/>
+   <arg column="display_name" javaType="java.lang.String"/>
+  </constructor>
+ </resultMap>
+ <select id="findByUsername" resultMap="credentials">SELECT id,username,password_hash,display_name FROM app_user WHERE username=#{username}</select>
+ <select id="findById" resultMap="credentials">SELECT id,username,password_hash,display_name FROM app_user WHERE id=#{id}</select>
+ <select id="candidates" resultType="com.devflow.backend.model.WorkspaceViews$UserOption">
+  SELECT u.id,u.username,u.display_name FROM app_user u WHERE
+  (u.username LIKE CONCAT('%',#{query},'%') OR u.display_name LIKE CONCAT('%',#{query},'%'))
+  AND NOT EXISTS(SELECT 1 FROM project_member m WHERE m.project_id=#{projectId} AND m.user_id=u.id)
+  ORDER BY u.id LIMIT 20
+ </select>
+ <insert id="insert">INSERT INTO app_user(username,password_hash,display_name) VALUES(#{username},#{hash},#{displayName})</insert>
 </mapper>

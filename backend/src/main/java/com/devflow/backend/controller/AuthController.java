@@ -21,10 +21,7 @@ public class AuthController {
 
     @GetMapping("/csrf")
     public CsrfResponse csrf(CsrfToken token) {
-        return new CsrfResponse(
-                token.getHeaderName(),
-                token.getToken()
-        );
+        return new CsrfResponse(token.getHeaderName(), token.getToken());
     }
 
     @GetMapping("/me")
@@ -35,20 +32,10 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
-        return new CurrentUser(
-                user.id(),
-                user.username(),
-                user.displayName()
-        );
+        return new CurrentUser(user.id(), user.username(), user.displayName());
     }
 
-    public record CsrfResponse(String headerName, String token) {
-    }
+    public record CsrfResponse(String headerName, String token) {}
 
-    public record CurrentUser(
-            Long id,
-            String username,
-            String displayName
-    ) {
-    }
+    public record CurrentUser(Long id, String username, String displayName) {}
 }

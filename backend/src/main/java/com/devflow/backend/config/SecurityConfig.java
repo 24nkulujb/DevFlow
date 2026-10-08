@@ -30,59 +30,50 @@ public class SecurityConfig {
             }
 
             return User.withUsername(user.username())
-                    .password(user.passwordHash())
-                    .roles("USER")
-                    .build();
+                .password(user.passwordHash())
+                .roles("USER")
+                .build();
         };
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
+        HttpSecurity http,
+        UserDetailsService userDetailsService,
+        PasswordEncoder passwordEncoder
     ) throws Exception {
         var provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
 
-        http
-                .authenticationProvider(provider)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/health",
-                                "/api/auth/csrf",
-                                "/api/auth/login",
-                                "/error"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+        http.authenticationProvider(provider)
+            .authorizeHttpRequests(auth ->
+                auth
+                    .requestMatchers("/api/health", "/api/auth/csrf", "/api/auth/login", "/error")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated()
+            )
+            .requestCache(cache -> cache.disable())
+            .httpBasic(basic -> basic.disable())
+            .exceptionHandling(exceptions ->
+                exceptions.authenticationEntryPoint((request, response, exception) ->
+                    response.setStatus(401)
                 )
-                .requestCache(cache -> cache.disable())
-                .httpBasic(basic -> basic.disable())
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(
-                                (request, response, exception) ->
-                                        response.setStatus(401)
-                        )
-                )
-                .formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
-                        .successHandler(
-                                (request, response, authentication) ->
-                                        response.setStatus(204)
-                        )
-                        .failureHandler(
-                                (request, response, exception) ->
-                                        response.setStatus(401)
-                        )
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessHandler(
-                                (request, response, authentication) ->
-                                        response.setStatus(204)
-                        )
-                );
+            )
+            .formLogin(form ->
+                form
+                    .loginProcessingUrl("/api/auth/login")
+                    .successHandler((request, response, authentication) -> response.setStatus(204))
+                    .failureHandler((request, response, exception) -> response.setStatus(401))
+                    .permitAll()
+            )
+            .logout(logout ->
+                logout
+                    .logoutUrl("/api/auth/logout")
+                    .logoutSuccessHandler((request, response, authentication) ->
+                        response.setStatus(204)
+                    )
+            );
 
         return http.build();
     }

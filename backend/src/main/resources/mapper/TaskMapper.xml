@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devflow.backend.mapper.TaskMapper">
+ <sql id="taskColumns">
+  SELECT t.id,t.project_id,t.title,t.description,t.status,t.priority,t.creator_id,t.assignee_id,t.due_date,t.version,t.created_at,t.updated_at,
+  c.display_name AS creator_name,a.display_name AS assignee_name
+  FROM task t JOIN app_user c ON c.id=t.creator_id LEFT JOIN app_user a ON a.id=t.assignee_id
+ </sql>
+ <select id="list" resultType="com.devflow.backend.model.Task">
+  <include refid="taskColumns"/> WHERE t.project_id=#{projectId}
+  <if test="status != null and status != ''">AND t.status=#{status}</if>
+  <if test="assigneeId != null">AND t.assignee_id=#{assigneeId}</if>
+  <if test="priority != null and priority != ''">AND t.priority=#{priority}</if>
+  <if test="query != null and query != ''">AND t.title LIKE CONCAT('%',#{query},'%')</if>
+  <if test="overdue">AND t.due_date &lt; #{today} AND t.status!='DONE'</if>
+  ORDER BY CASE t.priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END,t.id DESC
+ </select>
+ <select id="find" resultType="com.devflow.backend.model.Task"><include refid="taskColumns"/> WHERE t.project_id=#{projectId} AND t.id=#{id}</select>
+ <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+  INSERT INTO task(project_id,title,description,status,priority,creator_id,assignee_id,due_date)
+  VALUES(#{projectId},#{title},#{description},#{status},#{priority},#{creatorId},#{assigneeId},#{dueDate})
+ </insert>
+ <update id="update">
+  UPDATE task SET title=#{title},description=#{description},status=#{status},priority=#{priority},
+   assignee_id=#{assigneeId},due_date=#{dueDate},version=version+1,updated_at=CURRENT_TIMESTAMP
+  WHERE id=#{id} AND project_id=#{projectId} AND version=#{version}
+ </update>
+ <update id="unassignOpen">
+  UPDATE task SET assignee_id=NULL,version=version+1,updated_at=CURRENT_TIMESTAMP
+  WHERE project_id=#{projectId} AND assignee_id=#{userId} AND status!='DONE'
+ </update>
+ <select id="stats" resultType="com.devflow.backend.model.WorkspaceViews$Stats">
+  SELECT COUNT(*) AS total,
+   COALESCE(SUM(CASE WHEN status='TODO' THEN 1 ELSE 0 END),0) AS todo,
+   COALESCE(SUM(CASE WHEN status='IN_PROGRESS' THEN 1 ELSE 0 END),0) AS in_progress,
+   COALESCE(SUM(CASE WHEN status='DONE' THEN 1 ELSE 0 END),0) AS done,
+   COALESCE(SUM(CASE WHEN due_date &lt; #{today} AND status!='DONE' THEN 1 ELSE 0 END),0) AS overdue
+  FROM task WHERE project_id=#{projectId}
+ </select>
+ <select id="comments" resultType="com.devflow.backend.model.WorkspaceViews$Comment">
+  SELECT c.id,c.task_id,c.author_id,u.display_name AS author_name,c.content,c.created_at
+  FROM task_comment c JOIN app_user u ON u.id=c.author_id WHERE c.task_id=#{taskId} ORDER BY c.created_at,c.id
+ </select>
+ <insert id="addComment">INSERT INTO task_comment(task_id,author_id,content) VALUES(#{taskId},#{authorId},#{content})</insert>
+</mapper>
